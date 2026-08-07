@@ -103,8 +103,26 @@ function useLayout(
           : firstNodeX + (index * (lastNodeX - firstNodeX)) / (columnCount - 1),
     }));
 
+    // rank 1 (highest value) maps to the bottom; rank N maps to the top.
+    // This produces an ascending y-axis: small values at top, large values at bottom.
     const rankY = (rank: number) =>
-      rank >= 1 ? plotTop + (rank - 1) * rowHeight : plotTop;
+      rank >= 1 ? plotBottom - (rank - 1) * rowHeight : plotBottom;
+
+    // Build rank → representative y-axis value mapping.
+    // For each rank position, collect the yAxisField values across all series
+    // and pick the median value.
+    const rankValueMap = new Map<number, number>();
+    for (let rank = 1; rank <= rankCount; rank++) {
+      const values: number[] = [];
+      for (const s of series) {
+        const pt = s.points.find((p) => p.rank === rank);
+        if (pt && pt.value !== 0) values.push(pt.value);
+      }
+      if (values.length > 0) {
+        values.sort((a, b) => a - b); // ascending — rank 1 = highest, shown at bottom
+        rankValueMap.set(rank, values[Math.floor(values.length / 2)]);
+      }
+    }
 
     return {
       columns,
@@ -116,11 +134,23 @@ function useLayout(
       rankCount,
       plotTop,
       rowHeight,
+      rankValueMap,
     };
   }, [width, height, hasTitle, style, categories, series]);
 }
 
 // ─── Bezier path ──────────────────────────────────────────────────────────────
+/** Format a numeric y-axis value for display.
+ * Integers shown as-is; 1 decimal if needed; large numbers abbreviated (K/M).
+ */
+function formatYValue(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) return `${+(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000)     return `${+(value / 1_000).toFixed(1)}K`;
+  if (Number.isInteger(value)) return String(value);
+  return String(+value.toFixed(1));
+}
+
 function generateSmoothPath(
   x1: number, y1: number,
   x2: number, y2: number,
@@ -250,20 +280,24 @@ export function BumpChart({
           </text>
         ))}
 
-        {/* Rank labels (left axis) */}
+        {/* Y-axis labels — show the actual field value at each rank position */}
         {showRankLabels &&
-          Array.from({ length: layout.rankCount }, (_, i) => i + 1).map((rank) => (
-            <text
-              key={`rank-${rank}`}
-              className="bump-chart-rank"
-              fontSize={style.fontSize.rank}
-              x={style.padding.left + style.leftLabelWidth - labelGap}
-              y={layout.rankY(rank) + style.fontSize.rank * 0.35}
-              textAnchor="end"
-            >
-              {`${style.rankPrefix}${rank}${style.rankSuffix}`}
-            </text>
-          ))}
+          Array.from({ length: layout.rankCount }, (_, i) => i + 1).map((rank) => {
+            const val = layout.rankValueMap.get(rank);
+            const label = val !== undefined ? formatYValue(val) : String(rank);
+            return (
+              <text
+                key={`rank-${rank}`}
+                className="bump-chart-rank"
+                fontSize={style.fontSize.rank}
+                x={style.padding.left + style.leftLabelWidth - labelGap}
+                y={layout.rankY(rank) + style.fontSize.rank * 0.35}
+                textAnchor="end"
+              >
+                {label}
+              </text>
+            );
+          })}
 
         {/* Connector lines */}
         {coloredSeries.map((s) =>

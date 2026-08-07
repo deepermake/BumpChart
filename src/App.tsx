@@ -119,7 +119,6 @@ export default function App() {
             loading={loading}
             width={chartSize.width}
             height={chartSize.height}
-            title={t('plugin.title')}
             emptyText={t('empty.title')}
           />
         ) : (

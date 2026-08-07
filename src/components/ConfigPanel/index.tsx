@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Button, Form, Select } from '@douyinfe/semi-ui';
-import { dashboard } from '@lark-base-open/js-sdk';
+import { dashboard, SourceType } from '@lark-base-open/js-sdk';
+import type { IDataCondition } from '@lark-base-open/js-sdk';
 import type { IBumpChartConfig } from '../../App';
 import type { TableMeta, ViewMeta, FieldMeta } from '../../hooks/useTableData';
 import './style.scss';
@@ -30,21 +31,31 @@ export function ConfigPanel({ config, tables, views, fields, onChange }: ConfigP
   };
 
   const onSaveConfig = () => {
-    const dataConditions = config.tableId
+    // Strip undefined fields so JSON serialization is stable and SDK won't
+    // detect a spurious "config data changed" diff on round-trip.
+    const cleanConfig = Object.fromEntries(
+      Object.entries(config).filter(([, v]) => v !== undefined),
+    ) as Record<string, unknown>;
+
+    const dataConditions: IDataCondition[] = config.tableId
       ? [
           {
             tableId: config.tableId,
             ...(config.viewId
-              ? { dataRange: { type: 'VIEW' as const, viewId: config.viewId, viewName: '' } }
-              : {}),
+              ? {
+                  dataRange: {
+                    type: SourceType.VIEW,
+                    viewId: config.viewId,
+                    // Resolve actual view name; fall back to id if not found
+                    viewName: views.find((v) => v.id === config.viewId)?.name ?? config.viewId,
+                  },
+                }
+              : { dataRange: { type: SourceType.ALL } }),
           },
         ]
       : [];
 
-    dashboard.saveConfig({
-      customConfig: config,
-      dataConditions,
-    } as any);
+    dashboard.saveConfig({ customConfig: cleanConfig, dataConditions });
   };
 
   // Convert meta arrays to Semi Select option shapes
