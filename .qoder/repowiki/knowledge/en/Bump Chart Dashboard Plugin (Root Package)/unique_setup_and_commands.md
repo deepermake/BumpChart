@@ -1,0 +1,1 @@
+`npm run dev` starts the Vite dev server serving the demo at http://localhost:5173; `npm run build` runs `tsc && vite build --mode library` to emit ES + UMD bundles under `dist/`; `npm run preview` serves the built demo; `npm run lint` runs `tsc --noEmit` for type checking only.

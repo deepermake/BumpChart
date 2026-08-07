@@ -1,0 +1,129 @@
+@use "reset-css";
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+html,
+body {
+  background: transparent !important;
+}
+
+// ── Theme tokens ────────────────────────────────────────────────────────────
+// Supplement the Lark Base dashboard.css variables that are not shipped by
+// the SDK out of the box, so SVG text, borders and UI labels switch correctly
+// between light and dark modes.
+// Selector mirrors what dashboard.css uses: body[theme-mode=*]
+
+body[theme-mode='light'],
+html[theme-mode='light'] {
+  --ccm-chart-N900: #1f2329;
+  --ccm-chart-N800: #2b2f36;
+  --ccm-chart-N700: #373c43;
+  --ccm-chart-N600: #646a73;
+  --ccm-chart-N500: #8f959e;
+  --divider: rgba(31, 35, 41, 0.15);
+}
+
+body[theme-mode='dark'],
+html[theme-mode='dark'] {
+  --ccm-chart-N900: #f5f6f7;
+  --ccm-chart-N800: #d0d3d6;
+  --ccm-chart-N700: #b0b4ba;
+  --ccm-chart-N600: #8b9097;
+  --ccm-chart-N500: #646a73;
+  --divider: rgba(255, 255, 255, 0.12);
+}
+
+// ── Font stacks ────────────────────────────────────────────────────────────
+// Following the Lark Base UI spec: system-default first, then cross-platform
+// fallbacks, ending with emoji fonts for full Unicode coverage.
+
+// Chinese / English environment
+$font-zh-en:
+  -apple-system,
+  BlinkMacSystemFont,
+  'Helvetica Neue',
+  Tahoma,
+  'PingFang SC',
+  'Microsoft Yahei',
+  Arial,
+  'Hiragino Sans GB',
+  sans-serif,
+  'Apple Color Emoji',
+  'Segoe UI Emoji',
+  'Segoe UI Symbol',
+  'Noto Color Emoji';
+
+// Japanese environment
+$font-ja:
+  'ヒラギノ角ゴ Pro W3',
+  'Hiragino Kaku Gothic Pro',
+  'Yu Gothic UI',
+  '游ゴシック体',
+  'Noto Sans Japanese',
+  'Microsoft Jhenghei UI',
+  'Microsoft Yahei UI',
+  'ＭＳ Ｐゴシック',
+  Arial,
+  sans-serif,
+  'Apple Color Emoji',
+  'Segoe UI Emoji',
+  'Segoe UI Symbol',
+  'Noto Color Emoji';
+
+body {
+  // Default: Chinese / English font stack
+  font-family: $font-zh-en;
+}
+
+// Switch to Japanese font stack when html[lang="ja"] is set
+:lang(ja) body,
+html[lang='ja'] body {
+  font-family: $font-ja;
+}
+
+.main {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.empty-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+  box-sizing: border-box;
+  color: var(--ccm-chart-N500, #8f959e);
+}
+
+.empty-title {
+  font-size: clamp(12px, 2.5vmin, 18px);
+  font-weight: 600;
+  color: var(--ccm-chart-N700, #373c43);
+  margin-bottom: 6px;
+}
+
+.empty-tip {
+  font-size: clamp(10px, 1.8vmin, 14px);
+}

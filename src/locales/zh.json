@@ -1,0 +1,21 @@
+{
+  "plugin.title": "多系列排名变化图",
+  "config.table": "数据表",
+  "config.table.tip": "选择数据表",
+  "config.view": "视图（可选）",
+  "config.view.all": "全部数据",
+  "config.axis.x": "横轴字段",
+  "config.axis.y": "纵轴字段（数值）",
+  "config.series": "系列字段",
+  "config.axis.x.tip": "选择分类或时间字段",
+  "config.axis.y.tip": "选择用于计算排名的数值字段",
+  "config.series.tip": "选择同一实体的标识字段",
+  "config.color.scheme": "配色方案",
+  "config.color.image": "示例图配色",
+  "config.color.default": "默认配色",
+  "confirm": "确定",
+  "empty.title": "暂无数据",
+  "empty.tip": "请先在配置面板选择数据表和字段",
+  "rank.prefix": "第",
+  "rank.suffix": "名"
+}

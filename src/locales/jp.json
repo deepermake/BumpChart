@@ -1,0 +1,21 @@
+{
+  "plugin.title": "複数シリーズランキング変化図",
+  "config.table": "データテーブル",
+  "config.table.tip": "データテーブルを選択",
+  "config.view": "ビュー（任意）",
+  "config.view.all": "全データ",
+  "config.axis.x": "横軸フィールド",
+  "config.axis.y": "縦軸フィールド（数値）",
+  "config.series": "シリーズフィールド",
+  "config.axis.x.tip": "分類または時間フィールドを選択",
+  "config.axis.y.tip": "ランキング計算に使用する数値フィールドを選択",
+  "config.series.tip": "同一エンティティを識別するフィールドを選択",
+  "config.color.scheme": "配色",
+  "config.color.image": "サンプル画像配色",
+  "config.color.default": "デフォルト配色",
+  "confirm": "確定",
+  "empty.title": "データなし",
+  "empty.tip": "設定パネルでデータテーブルとフィールドを選択してください",
+  "rank.prefix": "第",
+  "rank.suffix": "位"
+}

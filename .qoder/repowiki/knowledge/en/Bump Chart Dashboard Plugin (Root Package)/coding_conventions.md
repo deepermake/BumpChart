@@ -1,0 +1,3 @@
+- Library builds are gated on Vite's `--mode library`, which toggates between library output config and demo output config in `vite.config.ts`.
+- React and react-dom are declared as peerDependencies and listed in Rollup `external` so they are not bundled into the plugin distribution.
+- TypeScript is configured with strict flags (`strict`, `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`) and JSX transform set to `react-jsx`.

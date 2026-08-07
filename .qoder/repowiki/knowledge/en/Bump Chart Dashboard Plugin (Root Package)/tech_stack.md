@@ -1,0 +1,1 @@
+Vite 5 + @vitejs/plugin-react for development and library bundling; TypeScript 5 with strict mode; vite-plugin-dts for `.d.ts` generation; React 18 as a peer dependency consumed by the plugin.

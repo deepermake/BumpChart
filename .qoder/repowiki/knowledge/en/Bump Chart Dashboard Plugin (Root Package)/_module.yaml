@@ -1,0 +1,15 @@
+schema_version: 1
+module_path: ""
+title: Bump Chart Dashboard Plugin (Root Package)
+scope:
+    - README.md
+    - .gitignore
+    - package.json
+    - package-lock.json
+    - tsconfig.json
+    - tsconfig.node.json
+    - vite.config.ts
+    - index.html
+source_files: []
+depends_on: []
+related_to: []

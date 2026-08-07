@@ -1,0 +1,21 @@
+{
+  "plugin.title": "Multi-Series Ranking Change Chart",
+  "config.table": "Data Table",
+  "config.table.tip": "Select a data table",
+  "config.view": "View (optional)",
+  "config.view.all": "All records",
+  "config.axis.x": "X-Axis Field",
+  "config.axis.y": "Y-Axis Field (Value)",
+  "config.series": "Series Field",
+  "config.axis.x.tip": "Select a category or time field",
+  "config.axis.y.tip": "Select a numeric field used to calculate ranking",
+  "config.series.tip": "Select the field that identifies each entity",
+  "config.color.scheme": "Color Scheme",
+  "config.color.image": "Sample Image Colors",
+  "config.color.default": "Default Colors",
+  "confirm": "Confirm",
+  "empty.title": "No Data",
+  "empty.tip": "Please select a data table and fields in the config panel",
+  "rank.prefix": "Rank ",
+  "rank.suffix": ""
+}

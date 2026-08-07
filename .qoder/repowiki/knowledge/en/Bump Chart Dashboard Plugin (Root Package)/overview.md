@@ -1,0 +1,1 @@
+Root package configuration for a React-based Bump Chart dashboard plugin that renders multi-series ranking change charts with configurable axis and series fields.
