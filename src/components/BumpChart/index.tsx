@@ -72,8 +72,9 @@ function useLayout(
   return useMemo(() => {
     const { padding, leftLabelWidth, rightLabelWidth, nodeWidth, nodeHeight } = style;
 
-    const titleHeight        = hasTitle ? style.fontSize.title + 16 : 0;
-    const categoryHeaderHeight = style.fontSize.category + 14;
+    const titleHeight          = hasTitle ? style.fontSize.title + 16 : 0;
+    // Use rank font size for consistency with y-axis labels
+    const categoryHeaderHeight = style.fontSize.rank + 14;
 
     const plotTop    = padding.top + titleHeight + categoryHeaderHeight;
     const plotBottom = height - padding.bottom;
@@ -266,14 +267,14 @@ export function BumpChart({
           </text>
         )}
 
-        {/* Category headers */}
+        {/* Category headers — same style as y-axis rank labels */}
         {layout.columns.map((col) => (
           <text
             key={`cat-${col.label}`}
             className="bump-chart-category"
-            fontSize={style.fontSize.category}
+            fontSize={style.fontSize.rank}
             x={col.x}
-            y={style.padding.top + layout.titleHeight + style.fontSize.category}
+            y={style.padding.top + layout.titleHeight + style.fontSize.rank}
             textAnchor="middle"
           >
             {col.label}
