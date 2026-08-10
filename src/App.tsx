@@ -22,16 +22,10 @@ export interface IBumpChartConfig {
 }
 
 const IMAGE_STYLE_COLORS: BumpChartStyle['colors'] = [
-  '#e8745a',
-  '#7fc2cc',
-  '#e2c08d',
-  '#e8745a',
-  '#7fc2cc',
-  '#e2c08d',
-  '#e8745a',
-  '#7fc2cc',
-  '#e2c08d',
-  '#e8745a',
+  '#5b8ff9', '#5ad8a6', '#f6bd16', '#e86452', '#6dc8ec',
+  '#945fb9', '#ff9845', '#1e9493', '#ff99c3', '#7262fd',
+  '#e8745a', '#7fc2cc', '#e2c08d', '#d3a4ff', '#ff9d4d',
+  '#82d588', '#ff6b84', '#61ddaa', '#748b9e', '#c76fdf',
 ];
 
 export default function App() {

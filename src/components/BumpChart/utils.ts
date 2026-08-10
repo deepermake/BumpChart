@@ -1,16 +1,10 @@
 import type { RawRecord, AxisConfig, SeriesData } from './types';
 
 const DEFAULT_COLORS = [
-  '#e8745a',
-  '#7fc2cc',
-  '#e2c08d',
-  '#5b8ff9',
-  '#f6bd16',
-  '#6dc8ec',
-  '#d3a4ff',
-  '#ff9d4d',
-  '#82d588',
-  '#ff6b84',
+  '#5b8ff9', '#5ad8a6', '#f6bd16', '#e86452', '#6dc8ec',
+  '#945fb9', '#ff9845', '#1e9493', '#ff99c3', '#7262fd',
+  '#e8745a', '#7fc2cc', '#e2c08d', '#d3a4ff', '#ff9d4d',
+  '#82d588', '#ff6b84', '#61ddaa', '#748b9e', '#c76fdf',
 ];
 
 export function getColors(colors?: string[]): string[] {
@@ -47,9 +41,14 @@ export function processData(
     groupedByCategory.get(category)!.push(record);
   }
 
-  const categories = Array.from(groupedByCategory.keys());
+  // Sort categories: numerically if all values are numeric, otherwise lexicographically.
+  const rawCategories = Array.from(groupedByCategory.keys());
+  const allNumeric = rawCategories.every((c) => !isNaN(Number(c)) && c.trim() !== '');
+  const categories = allNumeric
+    ? rawCategories.sort((a, b) => Number(a) - Number(b))
+    : rawCategories.sort();
+
   const seriesMap = new Map<string, SeriesData>();
-  const colors = getColors();
 
   for (const [categoryIndex, category] of categories.entries()) {
     const records = groupedByCategory.get(category) || [];
@@ -67,10 +66,10 @@ export function processData(
       const seriesName = item.seriesName;
 
       if (!seriesMap.has(seriesName)) {
-        const colorIndex = seriesMap.size % colors.length;
+        // Color is a placeholder — the component assigns real colors via coloredSeries.
         seriesMap.set(seriesName, {
           name: seriesName,
-          color: colors[colorIndex],
+          color: '',
           points: [],
         });
       }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import classnames from 'classnames';
 import { processData, getColors } from './utils';
 import type { BumpChartProps, BumpChartStyle, SeriesData } from './types';
@@ -205,6 +205,15 @@ export function BumpChart({
     [series, colors],
   );
 
+  // Debug: verify color assignment
+  if (coloredSeries.length > 0) {
+    console.log('[BumpChart] colors:', {
+      paletteSize: colors.length,
+      seriesCount: coloredSeries.length,
+      assignments: coloredSeries.map((s, i) => `${s.name}→${s.color} (idx=${i})`),
+    });
+  }
+
   // Breakpoint flags
   const showTitle        = width >= BP_HIDE_TITLE;
   const showRankLabels   = width >= BP_HIDE_RANK;
@@ -221,6 +230,23 @@ export function BumpChart({
   const layout   = useLayout(width, height, hasTitle, style, categories, coloredSeries);
 
   const labelGap = Math.max(3, Math.round(8 * scale));
+
+  // ── Highlight state: click a line/node to highlight its series ──────────────
+  const [highlightedSeries, setHighlightedSeries] = useState<string | null>(null);
+
+  const toggleHighlight = useCallback((seriesName: string) => {
+    setHighlightedSeries((prev) => (prev === seriesName ? null : seriesName));
+  }, []);
+
+  const clearHighlight = useCallback(() => {
+    setHighlightedSeries(null);
+  }, []);
+
+  // Opacity helper: when a series is highlighted, dim all others
+  const seriesOpacity = (name: string) =>
+    highlightedSeries === null ? 0.75 : highlightedSeries === name ? 1 : 0.12;
+  const nodeOpacity = (name: string) =>
+    highlightedSeries === null ? 1 : highlightedSeries === name ? 1 : 0.2;
 
   // ── Loading state ──────────────────────────────────────────────────────────
   if (loading) {
@@ -252,7 +278,7 @@ export function BumpChart({
   // ── Full chart ─────────────────────────────────────────────────────────────
   return (
     <div className={classnames('bump-chart', className)}>
-      <svg width={width} height={height} aria-label={title}>
+      <svg width={width} height={height} aria-label={title} onClick={clearHighlight}>
 
         {/* Title */}
         {hasTitle && (
@@ -301,12 +327,14 @@ export function BumpChart({
             );
           })}
 
-        {/* Connector lines — use categoryIndex for correct column lookup */}
+        {/* Connector lines — click to highlight */}
         {coloredSeries.map((s) => {
           const realPoints = s.points.filter((p) => p.rank >= 1);
           return realPoints.map((point, i) => {
             const next = realPoints[i + 1];
             if (!next) return null;
+            // Only connect if the two points are on adjacent x-axis categories
+            if (next.categoryIndex !== point.categoryIndex + 1) return null;
             const col1 = layout.columns[point.categoryIndex];
             const col2 = layout.columns[next.categoryIndex];
             if (!col1 || !col2) return null;
@@ -320,48 +348,58 @@ export function BumpChart({
                 d={generateSmoothPath(x1, y1, x2, y2)}
                 fill="none"
                 stroke={s.color}
-                strokeWidth={style.strokeWidth}
-                strokeOpacity={0.75}
+                strokeWidth={highlightedSeries === s.name ? style.strokeWidth * 1.5 : style.strokeWidth}
+                strokeOpacity={seriesOpacity(s.name)}
                 strokeLinecap="round"
+                style={{ cursor: 'pointer', transition: 'stroke-opacity 0.2s, stroke-width 0.2s' }}
+                onClick={(e) => { e.stopPropagation(); toggleHighlight(s.name); }}
               />
             );
           });
         })}
 
-        {/* Nodes + series labels — use categoryIndex for correct column lookup */}
-        {coloredSeries.map((s) =>
-          s.points
-            .filter((p) => p.rank >= 1)
-            .map((point) => {
-              const col = layout.columns[point.categoryIndex];
-              if (!col) return null;
-              const nx = col.x - style.nodeWidth / 2;
-              const ny = layout.rankY(point.rank) - style.nodeHeight / 2;
-              return (
-                <g key={`node-${s.name}-${point.categoryIndex}`}>
-                  <rect
-                    x={nx}
-                    y={ny}
-                    width={style.nodeWidth}
-                    height={style.nodeHeight}
-                    rx={Math.max(1, Math.round(2 * scale))}
-                    fill={s.color}
-                  />
-                  {showSeriesLabels && (
-                    <text
-                      className="bump-chart-label"
-                      fontSize={style.fontSize.label}
-                      x={col.x + style.nodeWidth / 2 + labelGap}
-                      y={layout.rankY(point.rank) + style.fontSize.label * 0.35}
-                      textAnchor="start"
-                    >
-                      {point.seriesName}
-                    </text>
-                  )}
-                </g>
-              );
-            })
-        )}
+        {/* Nodes + series labels — click to highlight */}
+        {coloredSeries.map((s) => {
+          const realPoints = s.points.filter((p) => p.rank >= 1);
+          const lastCatIdx = realPoints.length > 0
+            ? realPoints[realPoints.length - 1].categoryIndex
+            : -1;
+          return realPoints.map((point) => {
+            const col = layout.columns[point.categoryIndex];
+            if (!col) return null;
+            const nx = col.x - style.nodeWidth / 2;
+            const ny = layout.rankY(point.rank) - style.nodeHeight / 2;
+            const isLast = point.categoryIndex === lastCatIdx;
+            return (
+              <g
+                key={`node-${s.name}-${point.categoryIndex}`}
+                style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+                opacity={nodeOpacity(s.name)}
+                onClick={(e) => { e.stopPropagation(); toggleHighlight(s.name); }}
+              >
+                <rect
+                  x={nx}
+                  y={ny}
+                  width={style.nodeWidth}
+                  height={style.nodeHeight}
+                  rx={Math.max(1, Math.round(2 * scale))}
+                  fill={s.color}
+                />
+                {showSeriesLabels && isLast && (
+                  <text
+                    className="bump-chart-label"
+                    fontSize={style.fontSize.label}
+                    x={col.x + style.nodeWidth / 2 + labelGap}
+                    y={layout.rankY(point.rank) + style.fontSize.label * 0.35}
+                    textAnchor="start"
+                  >
+                    {point.seriesName}
+                  </text>
+                )}
+              </g>
+            );
+          });
+        })}
       </svg>
     </div>
   );
