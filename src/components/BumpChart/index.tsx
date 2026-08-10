@@ -361,15 +361,20 @@ export function BumpChart({
         {/* Nodes + series labels — click to highlight */}
         {coloredSeries.map((s) => {
           const realPoints = s.points.filter((p) => p.rank >= 1);
-          const lastCatIdx = realPoints.length > 0
-            ? realPoints[realPoints.length - 1].categoryIndex
-            : -1;
+          // A point is a "segment end" if the next real point is NOT adjacent on the x-axis
+          const segmentEnds = new Set<number>();
+          realPoints.forEach((point, i) => {
+            const next = realPoints[i + 1];
+            if (!next || next.categoryIndex !== point.categoryIndex + 1) {
+              segmentEnds.add(point.categoryIndex);
+            }
+          });
           return realPoints.map((point) => {
             const col = layout.columns[point.categoryIndex];
             if (!col) return null;
             const nx = col.x - style.nodeWidth / 2;
             const ny = layout.rankY(point.rank) - style.nodeHeight / 2;
-            const isLast = point.categoryIndex === lastCatIdx;
+            const isSegmentEnd = segmentEnds.has(point.categoryIndex);
             return (
               <g
                 key={`node-${s.name}-${point.categoryIndex}`}
@@ -385,7 +390,7 @@ export function BumpChart({
                   rx={Math.max(1, Math.round(2 * scale))}
                   fill={s.color}
                 />
-                {showSeriesLabels && isLast && (
+                {showSeriesLabels && isSegmentEnd && (
                   <text
                     className="bump-chart-label"
                     fontSize={style.fontSize.label}
