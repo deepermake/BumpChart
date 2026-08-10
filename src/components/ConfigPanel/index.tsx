@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button, Form, Select } from '@douyinfe/semi-ui';
-import { dashboard, SourceType } from '@lark-base-open/js-sdk';
-import type { IDataCondition } from '@lark-base-open/js-sdk';
+import { dashboard } from '@lark-base-open/js-sdk';
 import type { IBumpChartConfig } from '../../App';
 import type { TableMeta, ViewMeta, FieldMeta } from '../../hooks/useTableData';
 import './style.scss';
@@ -30,32 +29,24 @@ export function ConfigPanel({ config, tables, views, fields, onChange }: ConfigP
     onChange(next);
   };
 
-  const onSaveConfig = () => {
-    // Strip undefined fields so JSON serialization is stable and SDK won't
-    // detect a spurious "config data changed" diff on round-trip.
+  const onSaveConfig = async () => {
+    // Only save data-related fields to SDK customConfig.
+    const dataFields = ['tableId', 'viewId', 'xAxisField', 'yAxisField', 'seriesField'];
     const cleanConfig = Object.fromEntries(
-      Object.entries(config).filter(([, v]) => v !== undefined),
+      Object.entries(config)
+        .filter(([k, v]) => dataFields.includes(k) && v !== undefined && v !== ''),
     ) as Record<string, unknown>;
 
-    const dataConditions: IDataCondition[] = config.tableId
-      ? [
-          {
-            tableId: config.tableId,
-            ...(config.viewId
-              ? {
-                  dataRange: {
-                    type: SourceType.VIEW,
-                    viewId: config.viewId,
-                    // Resolve actual view name; fall back to id if not found
-                    viewName: views.find((v) => v.id === config.viewId)?.name ?? config.viewId,
-                  },
-                }
-              : { dataRange: { type: SourceType.ALL } }),
-          },
-        ]
-      : [];
+    console.log('[ConfigPanel] saveConfig customConfig:', JSON.parse(JSON.stringify(cleanConfig)));
 
-    dashboard.saveConfig({ customConfig: cleanConfig, dataConditions });
+    try {
+      // Save without dataConditions — the SDK derives data scope from customConfig.tableId/viewId.
+      // dataConditions with incorrect format can cause internal WATCH errors.
+      await dashboard.saveConfig({ customConfig: cleanConfig } as any);
+      console.log('[ConfigPanel] saveConfig success');
+    } catch (err) {
+      console.error('[ConfigPanel] saveConfig failed:', err);
+    }
   };
 
   // Convert meta arrays to Semi Select option shapes
