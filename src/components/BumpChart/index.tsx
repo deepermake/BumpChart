@@ -73,11 +73,11 @@ function useLayout(
     const { padding, leftLabelWidth, rightLabelWidth, nodeWidth, nodeHeight } = style;
 
     const titleHeight          = hasTitle ? style.fontSize.title + 16 : 0;
-    // Use rank font size for consistency with y-axis labels
-    const categoryHeaderHeight = style.fontSize.rank + 14;
+    const categoryHeaderHeight = style.fontSize.category + 14;
 
-    const plotTop    = padding.top + titleHeight + categoryHeaderHeight;
-    const plotBottom = height - padding.bottom;
+    // Data area: title at top, x-axis labels at bottom
+    const plotTop    = padding.top + titleHeight;
+    const plotBottom = height - padding.bottom - categoryHeaderHeight;
     const plotHeight = Math.max(1, plotBottom - plotTop);
 
     const rankCount = Math.max(
@@ -172,7 +172,7 @@ const DEFAULT_STYLE: Required<BumpChartStyle> = {
   rightLabelWidth: 60,
   nodeWidth:  10,
   nodeHeight: 22,
-  padding: { top: 20, right: 20, bottom: 20, left: 20 },
+  padding: { top: 20, right: 20, bottom: 32, left: 20 },
   rankPrefix: '第',
   rankSuffix: '',
 };
@@ -267,15 +267,16 @@ export function BumpChart({
           </text>
         )}
 
-        {/* Category headers — same style as y-axis rank labels */}
+        {/* X-axis category labels at the bottom, centered on each column */}
         {layout.columns.map((col) => (
           <text
             key={`cat-${col.label}`}
             className="bump-chart-category"
-            fontSize={style.fontSize.rank}
+            fontSize={style.fontSize.category}
             x={col.x}
-            y={style.padding.top + layout.titleHeight + style.fontSize.rank}
+            y={height - style.padding.bottom / 2}
             textAnchor="middle"
+            dominantBaseline="middle"
           >
             {col.label}
           </text>

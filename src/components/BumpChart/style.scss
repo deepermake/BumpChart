@@ -23,9 +23,9 @@
   fill: var(--ccm-chart-N900, #1f2329);
 }
 
-// X-axis category labels — same style as y-axis rank labels
 .bump-chart-category {
-  fill: var(--ccm-chart-N600, #646a73);
+  font-weight: 600;
+  fill: var(--ccm-chart-N700, #373c43);
 }
 
 .bump-chart-rank {
