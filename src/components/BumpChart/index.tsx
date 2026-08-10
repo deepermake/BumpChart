@@ -51,7 +51,7 @@ function getScaledStyle(
     },
     fontSize: {
       title:    Math.max(10, s(17)),
-      category: Math.max(9,  s(15)),
+      category: Math.max(8,  s(14)),
       rank:     Math.max(8,  s(14)),
       label:    Math.max(8,  s(14)),
       state:    Math.max(10, s(14)),
