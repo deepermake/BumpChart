@@ -301,46 +301,44 @@ export function BumpChart({
             );
           })}
 
-        {/* Connector lines */}
-        {coloredSeries.map((s) =>
-          s.points
-            .filter((p) => p.rank >= 1)
-            .slice(0, -1)
-            .map((point, index) => {
-              const next = s.points[index + 1];
-              if (!next || next.rank < 1) return null;
-              const col1 = layout.columns[index];
-              const col2 = layout.columns[index + 1];
-              if (!col1 || !col2) return null;
-              const x1 = col1.x + style.nodeWidth / 2;
-              const y1 = layout.rankY(point.rank);
-              const x2 = col2.x - style.nodeWidth / 2;
-              const y2 = layout.rankY(next.rank);
-              return (
-                <path
-                  key={`line-${s.name}-${index}`}
-                  d={generateSmoothPath(x1, y1, x2, y2)}
-                  fill="none"
-                  stroke={s.color}
-                  strokeWidth={style.strokeWidth}
-                  strokeOpacity={0.75}
-                  strokeLinecap="round"
-                />
-              );
-            })
-        )}
+        {/* Connector lines — use categoryIndex for correct column lookup */}
+        {coloredSeries.map((s) => {
+          const realPoints = s.points.filter((p) => p.rank >= 1);
+          return realPoints.map((point, i) => {
+            const next = realPoints[i + 1];
+            if (!next) return null;
+            const col1 = layout.columns[point.categoryIndex];
+            const col2 = layout.columns[next.categoryIndex];
+            if (!col1 || !col2) return null;
+            const x1 = col1.x + style.nodeWidth / 2;
+            const y1 = layout.rankY(point.rank);
+            const x2 = col2.x - style.nodeWidth / 2;
+            const y2 = layout.rankY(next.rank);
+            return (
+              <path
+                key={`line-${s.name}-${point.categoryIndex}`}
+                d={generateSmoothPath(x1, y1, x2, y2)}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={style.strokeWidth}
+                strokeOpacity={0.75}
+                strokeLinecap="round"
+              />
+            );
+          });
+        })}
 
-        {/* Nodes + series labels */}
+        {/* Nodes + series labels — use categoryIndex for correct column lookup */}
         {coloredSeries.map((s) =>
           s.points
             .filter((p) => p.rank >= 1)
-            .map((point, index) => {
-              const col = layout.columns[index];
+            .map((point) => {
+              const col = layout.columns[point.categoryIndex];
               if (!col) return null;
               const nx = col.x - style.nodeWidth / 2;
               const ny = layout.rankY(point.rank) - style.nodeHeight / 2;
               return (
-                <g key={`node-${s.name}-${index}`}>
+                <g key={`node-${s.name}-${point.categoryIndex}`}>
                   <rect
                     x={nx}
                     y={ny}

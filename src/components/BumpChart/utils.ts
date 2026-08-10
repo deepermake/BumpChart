@@ -82,6 +82,7 @@ export function processData(
           seriesName,
           rank: -1,
           value: 0,
+          categoryIndex: series.points.length,
         });
       }
 
@@ -90,6 +91,7 @@ export function processData(
         seriesName,
         rank,
         value: item.value,
+        categoryIndex,
       });
     }
   }
@@ -101,6 +103,7 @@ export function processData(
         seriesName: series.name,
         rank: -1,
         value: 0,
+        categoryIndex: series.points.length,
       });
     }
   }

@@ -49,6 +49,8 @@ export interface SeriesPoint {
   seriesName: string;
   rank: number;
   value: number;
+  /** Original index in the categories array — used for correct column lookup after filtering */
+  categoryIndex: number;
 }
 
 export interface SeriesData {
