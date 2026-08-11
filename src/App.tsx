@@ -47,12 +47,16 @@ export default function App() {
   const isCreate = dashboard.state === DashboardState.Create;
   const inSettings = isConfig || isCreate;
 
-  // Store the FULL IConfig from the SDK — dataConditions + customConfig.
-  // When saving, we pass the full IConfig back so the SDK sees no diff.
-  const [sdkConfig, setSdkConfig] = useState<IConfig>({
+  // Use a ref for SYNCHRONOUS config storage — the SDK may validate immediately
+  // after saveConfig, before React's async setState has committed.
+  // A ref ensures the latest config is always available synchronously.
+  const sdkConfigRef = useRef<IConfig>({
     dataConditions: [],
     customConfig: {},
   });
+
+  // State for rendering only — the ref is the source of truth for saveConfig.
+  const [sdkConfig, setSdkConfig] = useState<IConfig>(sdkConfigRef.current);
 
   // Derived: the plugin-level config (customConfig fields)
   const config: IBumpChartConfig = sdkConfig.customConfig as IBumpChartConfig;
@@ -60,9 +64,11 @@ export default function App() {
   const renderedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateConfig = useCallback((data: IConfig) => {
-    // Store the full IConfig as-is from the SDK.
+    // Update ref SYNCHRONOUSLY — the SDK may read this immediately after saveConfig.
+    sdkConfigRef.current = data;
+    // Update state for re-render.
     setSdkConfig(data);
-    // Notify Lark Base the plugin has rendered (enables screenshot automation).
+    // Notify Lark Base the plugin has rendered.
     if (renderedTimer.current) clearTimeout(renderedTimer.current);
     renderedTimer.current = setTimeout(() => {
       dashboard.setRendered();
@@ -71,10 +77,13 @@ export default function App() {
 
   // For ConfigPanel: merge current customConfig with user changes
   const onConfigPanelChange = useCallback((newCustomConfig: IBumpChartConfig) => {
-    setSdkConfig((prev) => ({
-      ...prev,
-      customConfig: { ...prev.customConfig, ...newCustomConfig },
-    }));
+    const updated: IConfig = {
+      ...sdkConfigRef.current,
+      customConfig: { ...sdkConfigRef.current.customConfig, ...newCustomConfig },
+    };
+    // Update ref synchronously.
+    sdkConfigRef.current = updated;
+    setSdkConfig(updated);
   }, []);
 
   useConfig(updateConfig);
@@ -143,6 +152,7 @@ export default function App() {
         <ConfigPanel
           config={config}
           sdkConfig={sdkConfig}
+          getSdkConfig={() => sdkConfigRef.current}
           tables={tables}
           views={views}
           fields={fields}

@@ -253,7 +253,7 @@ export function BumpChart({
     return (
       <div className={classnames('bump-chart', className)}>
         <div className="bump-chart-state">
-          <span style={{ fontSize: style.fontSize.state }}>加载中…</span>
+          <div className="bump-chart-spinner" />
         </div>
       </div>
     );

@@ -16,6 +16,20 @@
   // font-size is set inline per instance via <span style>
 }
 
+// Loading spinner
+.bump-chart-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--ccm-chart-N300, #dee0e3);
+  border-top-color: var(--ccm-chart-N600, #646a73);
+  border-radius: 50%;
+  animation: bump-chart-spin 0.8s linear infinite;
+}
+
+@keyframes bump-chart-spin {
+  to { transform: rotate(360deg); }
+}
+
 // SVG text classes — only fill/weight; font-size is driven by the
 // SVG fontSize attribute which is calculated per scale in the component.
 .bump-chart-title {
