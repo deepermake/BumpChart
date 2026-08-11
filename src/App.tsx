@@ -4,6 +4,7 @@ import './locales/i18n';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DashboardState } from '@lark-base-open/js-sdk';
+import type { IConfig, IDataCondition } from '@lark-base-open/js-sdk';
 import { useTheme, useConfig, dashboard } from './hooks';
 import { useTableData } from './hooks/useTableData';
 import { BumpChart } from './components/BumpChart';
@@ -46,14 +47,21 @@ export default function App() {
   const isCreate = dashboard.state === DashboardState.Create;
   const inSettings = isConfig || isCreate;
 
-  const [config, setConfig] = useState<IBumpChartConfig>({
-    useImageColors: true,
+  // Store the FULL IConfig from the SDK — dataConditions + customConfig.
+  // When saving, we pass the full IConfig back so the SDK sees no diff.
+  const [sdkConfig, setSdkConfig] = useState<IConfig>({
+    dataConditions: [],
+    customConfig: {},
   });
+
+  // Derived: the plugin-level config (customConfig fields)
+  const config: IBumpChartConfig = sdkConfig.customConfig as IBumpChartConfig;
 
   const renderedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const updateConfig = useCallback((data: IBumpChartConfig) => {
-    setConfig((prev) => ({ ...prev, ...data }));
+  const updateConfig = useCallback((data: IConfig) => {
+    // Store the full IConfig as-is from the SDK.
+    setSdkConfig(data);
     // Notify Lark Base the plugin has rendered (enables screenshot automation).
     if (renderedTimer.current) clearTimeout(renderedTimer.current);
     renderedTimer.current = setTimeout(() => {
@@ -61,7 +69,15 @@ export default function App() {
     }, 3000);
   }, []);
 
-  useConfig<IBumpChartConfig>(updateConfig);
+  // For ConfigPanel: merge current customConfig with user changes
+  const onConfigPanelChange = useCallback((newCustomConfig: IBumpChartConfig) => {
+    setSdkConfig((prev) => ({
+      ...prev,
+      customConfig: { ...prev.customConfig, ...newCustomConfig },
+    }));
+  }, []);
+
+  useConfig(updateConfig);
 
   // Load real table/view/field/record data from Lark Base
   const { tables, views, fields, records, loading } = useTableData(
@@ -79,7 +95,8 @@ export default function App() {
       : null;
 
   const style: BumpChartStyle = {
-    colors: config.useImageColors ? IMAGE_STYLE_COLORS : undefined,
+    // Default to true when useImageColors is undefined (not saved in config)
+    colors: config.useImageColors !== false ? IMAGE_STYLE_COLORS : undefined,
     rankPrefix: t('rank.prefix'),
     rankSuffix: t('rank.suffix'),
   };
@@ -125,10 +142,11 @@ export default function App() {
       {inSettings && (
         <ConfigPanel
           config={config}
+          sdkConfig={sdkConfig}
           tables={tables}
           views={views}
           fields={fields}
-          onChange={setConfig}
+          onChange={onConfigPanelChange}
         />
       )}
     </main>

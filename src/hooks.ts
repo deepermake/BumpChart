@@ -1,4 +1,5 @@
 import { DashboardState, bitable, dashboard } from '@lark-base-open/js-sdk';
+import type { IConfig } from '@lark-base-open/js-sdk';
 import { useLayoutEffect, useState } from 'react';
 
 function updateTheme(theme: string) {
@@ -30,15 +31,15 @@ export function useTheme() {
 }
 
 /** 初始化、更新 config */
-export function useConfig<T>(updateConfig: (data: T) => void) {
+export function useConfig(updateConfig: (data: IConfig) => void) {
   const isCreate = dashboard.state === DashboardState.Create;
 
   useLayoutEffect(() => {
     const init = async () => {
       if (isCreate) return;
       const res = await dashboard.getConfig();
-      if (res?.customConfig) {
-        updateConfig(res.customConfig as T);
+      if (res) {
+        updateConfig(res);
       }
     };
     init();
@@ -46,7 +47,10 @@ export function useConfig<T>(updateConfig: (data: T) => void) {
 
   useLayoutEffect(() => {
     const offConfigChange = dashboard.onConfigChange((r) => {
-      updateConfig(r.data as T);
+      // Pass the full IConfig (dataConditions + customConfig) to the plugin.
+      // The plugin stores it as-is and passes it back on save, ensuring
+      // the SDK sees no diff between load and save.
+      updateConfig(r.data);
     });
     return () => {
       offConfigChange();

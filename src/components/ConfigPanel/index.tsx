@@ -1,19 +1,22 @@
 import { useTranslation } from 'react-i18next';
 import { Button, Form, Select } from '@douyinfe/semi-ui';
-import { dashboard } from '@lark-base-open/js-sdk';
+import { dashboard, SourceType } from '@lark-base-open/js-sdk';
+import type { IConfig, IDataCondition } from '@lark-base-open/js-sdk';
 import type { IBumpChartConfig } from '../../App';
 import type { TableMeta, ViewMeta, FieldMeta } from '../../hooks/useTableData';
 import './style.scss';
 
 export interface ConfigPanelProps {
   config: IBumpChartConfig;
+  /** The full SDK config including dataConditions — preserved for save round-trip */
+  sdkConfig: IConfig;
   tables: TableMeta[];
   views: ViewMeta[];
   fields: FieldMeta[];
   onChange: (config: IBumpChartConfig) => void;
 }
 
-export function ConfigPanel({ config, tables, views, fields, onChange }: ConfigPanelProps) {
+export function ConfigPanel({ config, sdkConfig, tables, views, fields, onChange }: ConfigPanelProps) {
   const { t } = useTranslation();
 
   const update = (key: keyof IBumpChartConfig, value: unknown) => {
@@ -30,19 +33,48 @@ export function ConfigPanel({ config, tables, views, fields, onChange }: ConfigP
   };
 
   const onSaveConfig = async () => {
-    // Only save data-related fields to SDK customConfig.
+    // Only save data-related fields to customConfig.
     const dataFields = ['tableId', 'viewId', 'xAxisField', 'yAxisField', 'seriesField'];
     const cleanConfig = Object.fromEntries(
       Object.entries(config)
         .filter(([k, v]) => dataFields.includes(k) && v !== undefined && v !== ''),
     ) as Record<string, unknown>;
 
-    console.log('[ConfigPanel] saveConfig customConfig:', JSON.parse(JSON.stringify(cleanConfig)));
+    // Use the SDK's original dataConditions if available (ensures round-trip consistency).
+    // Only construct new ones if the table changed or there are no existing conditions.
+    const tableChanged = !sdkConfig.dataConditions.some(
+      (dc) => dc.tableId === config.tableId,
+    );
+    let dataConditions: IDataCondition[];
+    if (sdkConfig.dataConditions.length > 0 && !tableChanged) {
+      dataConditions = sdkConfig.dataConditions;
+    } else if (config.tableId) {
+      dataConditions = [
+        {
+          tableId: config.tableId,
+          ...(config.viewId
+            ? {
+                dataRange: {
+                  type: SourceType.VIEW,
+                  viewId: config.viewId,
+                  viewName: views.find((v) => v.id === config.viewId)?.name ?? config.viewId,
+                },
+              }
+            : {}),
+        },
+      ];
+    } else {
+      dataConditions = [];
+    }
+
+    console.log('[ConfigPanel] saveConfig:', {
+      customConfig: JSON.parse(JSON.stringify(cleanConfig)),
+      dataConditions: JSON.parse(JSON.stringify(dataConditions)),
+      usingOriginalDC: sdkConfig.dataConditions.length > 0 && !tableChanged,
+    });
 
     try {
-      // Save without dataConditions — the SDK derives data scope from customConfig.tableId/viewId.
-      // dataConditions with incorrect format can cause internal WATCH errors.
-      await dashboard.saveConfig({ customConfig: cleanConfig } as any);
+      await dashboard.saveConfig({ customConfig: cleanConfig, dataConditions });
       console.log('[ConfigPanel] saveConfig success');
     } catch (err) {
       console.error('[ConfigPanel] saveConfig failed:', err);
